@@ -67,6 +67,13 @@ class Block:
         if self.y > SCREEN_HEIGHT:
             gameOver()
 
+    def changeSpeed(self, direction):
+        if direction == "up":
+            self.fallspeed += 0.25
+        else:
+            if self.fallspeed > 2:
+                self.fallspeed -= 0.25
+                
 
     def checkCollision(self, collisionItem):
         if self.sprite.colliderect(collisionItem.sprite):
@@ -136,9 +143,9 @@ while __name__ == "__main__" and runScript:
                 pygame.quit()
                 sys.exit()
             elif event.key == pygame.K_UP:
-                block.fallspeed += 0.25
+                block.changeSpeed("up")
             elif event.key == pygame.K_DOWN:
-                block.fallspeed -= 0.25
+                block.changeSpeed("down")
 
 
     block.fall()
