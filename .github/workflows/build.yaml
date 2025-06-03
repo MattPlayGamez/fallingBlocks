@@ -25,12 +25,14 @@ jobs:
 
       - name: Build with PyInstaller
         run: pyinstaller --clean --onefile --windowed --collect-all pygame --hidden-import=pygame --hidden-import=pygame.locals --hidden-import=pygame._view --hidden-import=pygame.mixer_music --add-data "Flag.png;." main.py
-
+        
       - name: Check if commit has a tag
         id: get_tag
+        shell: pwsh
         run: |
-          TAG_NAME=$(git tag --points-at HEAD)
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          $tag = git tag --points-at HEAD
+          Write-Output "TAG_NAME=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
 
       - name: Upload to GitHub Release (only if tag exists)
         if: env.TAG_NAME != ''
