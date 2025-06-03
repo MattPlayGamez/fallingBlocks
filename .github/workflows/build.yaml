@@ -29,7 +29,8 @@ jobs:
       - name: Check if commit has a tag
         id: get_tag
         run: |
-          echo "TAG_NAME=$(git tag --points-at HEAD)" >> $GITHUB_ENV
+          TAG_NAME=$(git tag --points-at HEAD)
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
       - name: Upload to GitHub Release (only if tag exists)
         if: env.TAG_NAME != ''
@@ -39,4 +40,4 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           draft: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
