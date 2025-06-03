@@ -1,10 +1,9 @@
-name: Windows PyInstaller Build
+name: Build and Release Windows Executable
 
 on:
   push:
-    branches:
-      - main
-      - dev
+    tags:
+      - 'V*'        # Trigger alleen bij tags zoals v1.0, v1.2.3
 
 jobs:
   build:
@@ -32,3 +31,10 @@ jobs:
         with:
           name: windows-build
           path: dist/main.exe
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/main.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
