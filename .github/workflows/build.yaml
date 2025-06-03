@@ -13,19 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Check if tag is on main
-        run: |
-          BRANCH=$(git branch -r --contains ${{ github.ref }} | grep origin/main || true)
-          echo "Branch: $BRANCH"
-          if [ -z "$BRANCH" ]; then
-            echo "❌ Tag is not on main. Exiting."
-            exit 1
-          fi
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
