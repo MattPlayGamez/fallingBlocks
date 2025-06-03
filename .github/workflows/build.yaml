@@ -26,9 +26,17 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller --clean --onefile --windowed --collect-all pygame --hidden-import=pygame --hidden-import=pygame.locals --hidden-import=pygame._view --hidden-import=pygame.mixer_music --add-data "Flag.png;." main.py
 
-      - name: Upload to GitHub Release
+      - name: Check if commit has a tag
+        id: get_tag
+        run: |
+          echo "TAG_NAME=$(git tag --points-at HEAD)" >> $GITHUB_ENV
+
+      - name: Upload to GitHub Release (only if tag exists)
+        if: env.TAG_NAME != ''
         uses: softprops/action-gh-release@v2
         with:
           files: dist/main.exe
+          tag_name: ${{ env.TAG_NAME }}
+          draft: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
