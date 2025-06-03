@@ -2,8 +2,8 @@ name: Build and Release on Tag to Main
 
 on:
   push:
-    tags:
-      - 'v*'  # Activeer bij push van tags zoals v1.0.0
+    branches:
+      - main
 
 jobs:
   build:
