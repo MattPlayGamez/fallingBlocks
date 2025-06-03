@@ -1,9 +1,9 @@
-name: Build and Release Windows Executable
+name: Build and Release on Tag to Main
 
 on:
   push:
     tags:
-      - 'V*'        # Trigger alleen bij tags zoals v1.0, v1.2.3
+      - 'v*'  # Activeer bij push van tags zoals v1.0.0
 
 jobs:
   build:
@@ -12,6 +12,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Check if tag is on main
+        run: |
+          BRANCH=$(git branch -r --contains ${{ github.ref }} | grep origin/main || true)
+          echo "Branch: $BRANCH"
+          if [ -z "$BRANCH" ]; then
+            echo "❌ Tag is not on main. Exiting."
+            exit 1
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,15 +35,9 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller --clean --onefile --windowed --collect-all pygame --hidden-import=pygame --hidden-import=pygame.locals --hidden-import=pygame._view --hidden-import=pygame.mixer_music --add-data "Flag.png;." main.py
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-build
-          path: dist/main.exe
-
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/main.exe
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
