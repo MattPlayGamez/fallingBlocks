@@ -1,0 +1,40 @@
+name: Build and Release Windows Executable
+
+on:
+  push:
+    tags:
+      - 'V*'        # Trigger alleen bij tags zoals v1.0, v1.2.3
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pygame
+
+      - name: Build with PyInstaller
+        run: pyinstaller --clean --onefile --windowed --collect-all pygame --hidden-import=pygame --hidden-import=pygame.locals --hidden-import=pygame._view --hidden-import=pygame.mixer_music --add-data "Flag.png;." main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: dist/main.exe
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/main.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
