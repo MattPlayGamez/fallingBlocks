@@ -9,6 +9,7 @@ SCREEN_HEIGHT = 600
 
 score = 0
 
+print("Startup of the script")
 
 class Colors:
     white = (255, 255, 255)
