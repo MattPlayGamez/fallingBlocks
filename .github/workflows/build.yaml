@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
 
 jobs:
   build:
@@ -17,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12' # You can change this version if needed
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -25,13 +24,8 @@ jobs:
           pip install pyinstaller pygame
 
       - name: Build with PyInstaller
-        run: |
-          pyinstaller --clean --onefile --windowed --collect-all pygame ^
-            --hidden-import=pygame ^
-            --hidden-import=pygame.locals ^
-            --hidden-import=pygame._view ^
-            --hidden-import=pygame.mixer_music ^
-            --add-data "Flag.png;." main.py
+        run: pyinstaller --clean --onefile --windowed --collect-all pygame --hidden-import=pygame --hidden-import=pygame.locals --hidden-import=pygame._view --hidden-import=pygame.mixer_music --add-data "Flag.png;." main.py
+
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
