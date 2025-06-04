@@ -1,7 +1,9 @@
-import random
-import pygame
-import sys
 import os
+import random
+import sys
+
+import pygame
+
 pygame.init()
 
 SCREEN_WIDTH = 800
@@ -10,6 +12,7 @@ SCREEN_HEIGHT = 600
 score = 0
 
 print("Startup of the script")
+
 
 class Colors:
     white = (255, 255, 255)
@@ -36,7 +39,10 @@ class Paddle:
         self.draw()
 
     def draw(self):
-        self.sprite = pygame.draw.rect(self.screen, Colors.white, (self.x, self.y, self.width, self.height), border_radius=0, border_top_left_radius=-1, border_bottom_right_radius=-1, border_top_right_radius=-1, border_bottom_left_radius=-1)
+        self.sprite = pygame.draw.rect(self.screen, Colors.white, (self.x, self.y, self.width, self.height),
+                                       border_radius=0, border_top_left_radius=-1, border_bottom_right_radius=-1,
+                                       border_top_right_radius=-1, border_bottom_left_radius=-1)
+
     def moveLeft(self):
         self.x -= self.width / 2
         print("Moving Left")
@@ -46,6 +52,7 @@ class Paddle:
         self.x += self.width / 2
         print("Moving Right")
         self.draw()
+
 
 class Block:
     def __init__(self, width, height):
@@ -74,7 +81,6 @@ class Block:
         else:
             if self.fallspeed > 2:
                 self.fallspeed -= 0.25
-                
 
     def checkCollision(self, collisionItem):
         if self.sprite.colliderect(collisionItem.sprite):
@@ -97,7 +103,8 @@ font = pygame.font.SysFont("comicsans", 30)
 
 runScript = True
 paddle = Paddle(10, 10)
-block = Block( 10, 10)
+block = Block(10, 10)
+
 
 def resource_path(relative_path):
     try:
@@ -106,8 +113,10 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+
 raw_image = pygame.image.load(resource_path("Flag.png"))
 background_image = pygame.transform.scale(raw_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
 
 def gameOver():
     global showText
@@ -119,14 +128,14 @@ def gameOver():
     screen.blit(text, (((SCREEN_WIDTH - text.get_width()) / 2), SCREEN_HEIGHT / 2))
 
     pygame.display.flip()
+
+
 showText = True
 while __name__ == "__main__" and runScript:
-
 
     screen.fill(Colors.black)
     paddle.draw()
     block.draw()
-
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -143,11 +152,18 @@ while __name__ == "__main__" and runScript:
             elif event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 sys.exit()
+            elif event.key == pygame.K_RETURN:
+                screen.fill(Colors.black)
+                score = 0
+                block.fallspeed = 2 - 0.25
+                block.reset()
+                paddle.centerPaddle()
+                runScript = True
+                showText = True
             elif event.key == pygame.K_UP:
                 block.changeSpeed("up")
             elif event.key == pygame.K_DOWN:
                 block.changeSpeed("down")
-
 
     block.fall()
     if block.checkCollision(paddle):
@@ -155,13 +171,11 @@ while __name__ == "__main__" and runScript:
         block.reset()
 
     if showText:
-
         score_text = font.render("Score: " + str(score), True, Colors.green)
         screen.blit(score_text, (10, 10))
 
         score_text = font.render("Your fall speed is: " + str(block.fallspeed), True, Colors.green)
         screen.blit(score_text, ((SCREEN_WIDTH - score_text.get_width() - 5), 10))
-
 
     pygame.display.update()
     clock.tick(60)
