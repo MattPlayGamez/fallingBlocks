@@ -1,13 +1,54 @@
 import os
 import random
 import sys
-
+import argparse
 import pygame
 
+# Argument parser setup
+parser = argparse.ArgumentParser(description='A simple game made by Mathys Penson')
+
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-fs", "--fullscreen", action="store_true", help="Enable fullscreen mode (default)")
+group.add_argument("-w", "--windowed", action="store_true", help="Enable windowed mode")
+
+parser.add_argument("-r", "--resolution", type=str, help="The screen resolution in WIDTH:HEIGHT format (e.g., 1920:1080)")
+
+args = parser.parse_args()
+
+# Init pygame first
 pygame.init()
 
+# Default mode is fullscreen
+mode = "fullscreen"
+if args.windowed:
+    mode = "windowed"
+elif args.fullscreen:
+    mode = "fullscreen"  # explicit
+
+# Default resolution (will be overwritten if fullscreen or specified)
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
+
+# Handle resolution
+if args.resolution:
+    try:
+        width, height = args.resolution.split(":")
+        SCREEN_WIDTH, SCREEN_HEIGHT = int(width), int(height)
+    except ValueError:
+        print("❌ Invalid resolution format. Use WIDTH:HEIGHT (e.g., 1920:1080).")
+        sys.exit(1)
+elif mode == "fullscreen":
+    # Get screen size only after pygame.init()
+    info = pygame.display.Info()
+    SCREEN_WIDTH, SCREEN_HEIGHT = info.current_w, info.current_h
+
+# Set display mode
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("My Game")
+
+# Debug info
+print(f"Running in {mode.upper()} mode at {SCREEN_WIDTH}x{SCREEN_HEIGHT}")
+
 
 score = 0
 
@@ -164,6 +205,10 @@ while __name__ == "__main__" and runScript:
                 block.changeSpeed("up")
             elif event.key == pygame.K_DOWN:
                 block.changeSpeed("down")
+            elif event.key == pygame.K_f:
+                pygame.display.toggle_fullscreen()
+            elif event.key == pygame.K_RALT:
+                score+=1
 
     block.fall()
     if block.checkCollision(paddle):
