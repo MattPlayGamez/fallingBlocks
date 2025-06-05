@@ -103,4 +103,4 @@ Dit is een eenvoudig spel gemaakt door Mathys Penson waarbij de speler een blok 
 | 1.0    | 05-06-2025  | Eerste release met basisfunctionaliteit |
 
 ## Licentie
-Dit project is gelicentieerd onder de MIT-licentie. Zie het `LICENSE`-bestand voor details.
+Dit project is gelicentieerd onder de Eclipse Public License - v 2.0. Zie het `LICENSE`-bestand voor details.
