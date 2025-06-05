@@ -97,10 +97,5 @@ Dit is een eenvoudig spel gemaakt door Mathys Penson waarbij de speler een blok 
 - **Escape**: Sluit het spel af.
 - **Rechter Alt (RALT)**: Verhoog de score (voor testdoeleinden).
 
-## Geschiedenis en Versies
-| Versie | Datum       | Beschrijving                         |
-|--------|-------------|--------------------------------------|
-| 1.0    | 05-06-2025  | Eerste release met basisfunctionaliteit |
-
 ## Licentie
 Dit project is gelicentieerd onder de Eclipse Public License - v 2.0. Zie het `LICENSE`-bestand voor details.
