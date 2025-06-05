@@ -2,9 +2,9 @@ import os
 import random
 import sys
 import argparse
+from time import sleep
 import pygame
 
-# Argument parser setup
 parser = argparse.ArgumentParser(description='A simple game made by Mathys Penson')
 
 group = parser.add_mutually_exclusive_group()
@@ -12,24 +12,22 @@ group.add_argument("-fs", "--fullscreen", action="store_true", help="Enable full
 group.add_argument("-w", "--windowed", action="store_true", help="Enable windowed mode")
 
 parser.add_argument("-r", "--resolution", type=str, help="The screen resolution in WIDTH:HEIGHT format (e.g., 1920:1080)")
-
+parser.add_argument("-l", "--limit", type=float, help="What is the limit of the falling speed (default 18)")
 args = parser.parse_args()
 
-# Init pygame first
 pygame.init()
 
-# Default mode is fullscreen
-mode = "fullscreen"
+mode = "windowed"
 if args.windowed:
     mode = "windowed"
 elif args.fullscreen:
-    mode = "fullscreen"  # explicit
+    mode = "fullscreen"
 
-# Default resolution (will be overwritten if fullscreen or specified)
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-# Handle resolution
+maxFallSpeed = 18
+
 if args.resolution:
     try:
         width, height = args.resolution.split(":")
@@ -38,29 +36,24 @@ if args.resolution:
         print("❌ Invalid resolution format. Use WIDTH:HEIGHT (e.g., 1920:1080).")
         sys.exit(1)
 elif mode == "fullscreen":
-    # Get screen size only after pygame.init()
     info = pygame.display.Info()
     SCREEN_WIDTH, SCREEN_HEIGHT = info.current_w, info.current_h
 
-# Set display mode
+if args.limit:
+    try:
+        maxFallSpeed = args.limit
+    except ValueError:
+        print("❌ Invalid limit fall speed.")
+
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("My Game")
-
-# Debug info
-print(f"Running in {mode.upper()} mode at {SCREEN_WIDTH}x{SCREEN_HEIGHT}")
-
-
-score = 0
-
-print("Startup of the script")
 
 
 class Colors:
     white = (255, 255, 255)
     black = (0, 0, 0)
     blue = (0, 0, 255)
-    yellow = (255, 255, 0)
     green = (0, 255, 0)
+    red = (255, 0, 0)
 
 
 class Paddle:
@@ -85,13 +78,15 @@ class Paddle:
                                        border_top_right_radius=-1, border_bottom_left_radius=-1)
 
     def moveLeft(self):
-        self.x -= self.width / 2
-        print("Moving Left")
+        self.x -= self.width / 10
+        if self.x < 0:
+            self.x = 0
         self.draw()
 
     def moveRight(self):
-        self.x += self.width / 2
-        print("Moving Right")
+        self.x += self.width / 10
+        if self.x + self.width > SCREEN_WIDTH:
+            self.x = SCREEN_WIDTH - self.width
         self.draw()
 
 
@@ -105,41 +100,69 @@ class Block:
         self.fallspeed = 2
         self.sprite = None
         self.rect = None
+        self.velocity = pygame.math.Vector2(0, self.fallspeed)
+        self.angle = 90.00
 
     def draw(self):
         self.sprite = pygame.draw.rect(self.screen, Colors.blue, (self.x, self.y, self.width, self.height))
 
     def fall(self):
-        self.y += self.fallspeed
+        self.x += self.velocity.x
+        self.y += self.velocity.y
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.draw()
 
-        if self.y > SCREEN_HEIGHT:
+        if self.y + self.height > SCREEN_HEIGHT:
             gameOver()
+
+    def updateFallSpeed(self):
+        if self.fallspeed >= maxFallSpeed:
+            self.fallspeed = maxFallSpeed
+        else:
+            self.fallspeed += .5
 
     def changeSpeed(self, direction):
         if direction == "up":
-            self.fallspeed += 0.25
+            self.updateFallSpeed()
         else:
             if self.fallspeed > 2:
                 self.fallspeed -= 0.25
+        self.velocity = self.velocity.normalize() * self.fallspeed
 
     def checkCollision(self, collisionItem):
         if self.sprite.colliderect(collisionItem.sprite):
-            print("Collision detected")
             return True
         return False
 
     def reset(self):
-        self.x = random.randint(0, SCREEN_WIDTH - 1)
+        self.angle = 90.00
+        self.x = random.randint(0, SCREEN_WIDTH - self.width)
+        self.velocity = pygame.math.Vector2(1, 0).rotate(self.angle) * self.fallspeed
         self.y = 10
-        self.fallspeed += 0.25
+        self.fallspeed = 2
         self.draw()
 
+    def rebounce(self, distanceFromMiddle):
+        self.updateFallSpeed()
+        maxAfwijking = 45
+        norm = distanceFromMiddle / (paddle.width / 2)
+        angle = 270 - norm * maxAfwijking
+        self.angle = angle
+        self.velocity = pygame.math.Vector2(1, 0).rotate(angle) * self.fallspeed
+
+    def rebounceFromScreen(self, axis):
+        if axis == 'x':
+            self.velocity.x = -self.velocity.x
+        elif axis == 'y':
+            self.velocity.y = -self.velocity.y
+        self.angle = self.velocity.angle_to(pygame.math.Vector2(1, 0))
+        self.updateFallSpeed()
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Catching the falling blocks")
 
 clock = pygame.time.Clock()
+smallFont = pygame.font.SysFont("comicsans", 20)
 font = pygame.font.SysFont("comicsans", 30)
 
 runScript = True
@@ -147,32 +170,36 @@ paddle = Paddle(10, 10)
 block = Block(10, 10)
 
 
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+def startupFrame():
+    screen.fill(Colors.black)
+    text = font.render("This game has been made by Mathys Penson", True, Colors.red)
+    screen.blit(text, (((SCREEN_WIDTH - text.get_width()) / 2), SCREEN_HEIGHT / 2))
+    link = smallFont.render('https://github.com/mattplaygamez/fallingBlocks', True, Colors.red)
+    screen.blit(link, (((SCREEN_WIDTH - link.get_width()) / 2), (SCREEN_HEIGHT / 2)+50))
 
-
-raw_image = pygame.image.load(resource_path("Flag.png"))
-background_image = pygame.transform.scale(raw_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.update()
+    sleep(2)
 
 
 def gameOver():
     global showText
     showText = False
 
-    screen.blit(background_image, (0, 0))
+    screen.fill(Colors.blue)
 
     text = font.render("Your final score is: " + str(score), True, Colors.white)
     screen.blit(text, (((SCREEN_WIDTH - text.get_width()) / 2), SCREEN_HEIGHT / 2))
 
+    text = smallFont.render("Press ENTER to restart", True, Colors.white)
+    screen.blit(text, (((SCREEN_WIDTH - text.get_width()) / 2), (SCREEN_HEIGHT / 2) + 50))
+
     pygame.display.flip()
 
-
+score = 0
 showText = True
+startupFrame()
 while __name__ == "__main__" and runScript:
+    didBounce = False
 
     screen.fill(Colors.black)
     paddle.draw()
@@ -184,19 +211,13 @@ while __name__ == "__main__" and runScript:
             pygame.quit()
             sys.exit()
 
-        # check if arrows are pressed
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                paddle.moveLeft()
-            elif event.key == pygame.K_RIGHT:
-                paddle.moveRight()
-            elif event.key == pygame.K_ESCAPE:
+            if event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 sys.exit()
             elif event.key == pygame.K_RETURN:
                 screen.fill(Colors.black)
                 score = 0
-                block.fallspeed = 2 - 0.25
                 block.reset()
                 paddle.centerPaddle()
                 runScript = True
@@ -208,19 +229,39 @@ while __name__ == "__main__" and runScript:
             elif event.key == pygame.K_f:
                 pygame.display.toggle_fullscreen()
             elif event.key == pygame.K_RALT:
-                score+=1
+                score += 1
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        paddle.moveLeft()
+    elif keys[pygame.K_RIGHT]:
+        paddle.moveRight()
+
 
     block.fall()
-    if block.checkCollision(paddle):
+    if block.checkCollision(paddle) and not didBounce:
+        distanceFromMiddle = (paddle.x + (paddle.width / 2)) - (block.x + block.width / 2)
+        block.rebounce(distanceFromMiddle)
         score += 1
-        block.reset()
+        didBounce = True
+
+    if not didBounce:
+        if block.x <= 0:
+            block.rebounceFromScreen('x')
+            didBounce = True
+        elif block.x + block.width >= SCREEN_WIDTH:
+            block.rebounceFromScreen('x')
+            didBounce = True
+        elif block.y <= 0:
+            block.rebounceFromScreen('y')
+            didBounce = True
+
 
     if showText:
-        score_text = font.render("Score: " + str(score), True, Colors.green)
-        screen.blit(score_text, (10, 10))
+        scoreText = font.render("Score: " + str(score), True, Colors.green)
+        screen.blit(scoreText, (10, 10))
 
-        score_text = font.render("Your fall speed is: " + str(block.fallspeed), True, Colors.green)
-        screen.blit(score_text, ((SCREEN_WIDTH - score_text.get_width() - 5), 10))
+        scoreText = font.render("Your fall speed is: " + str(round(block.fallspeed, 2)), True, Colors.green)
+        screen.blit(scoreText, ((SCREEN_WIDTH - scoreText.get_width() - 5), 10))
 
     pygame.display.update()
     clock.tick(60)
